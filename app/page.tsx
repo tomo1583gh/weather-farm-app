@@ -74,7 +74,7 @@ async function fetchWeather(): Promise<WeatherResponse> {
     timezone: "Asia/Tokyo",
     current_weather: {
       temperature: 18.5,
-      windspeed: 3.2,
+      windspeed: 10,
       winddirection: 180,
       weathercode: 0,
       time: now.toISOString(),
@@ -86,6 +86,18 @@ async function fetchWeather(): Promise<WeatherResponse> {
       precipitation_sum: [12, 0, 0, 3.2, 0, 0.2, 15],
     },
   };
+}
+
+// 風向き→方角名
+function getWindDirectionName(deg: number): string {
+  if (deg >= 337.5 || deg < 22.5) return "北風";
+  if (deg >= 22.5 && deg < 67.5) return "北東の風";
+  if (deg >= 67.5 && deg < 112.5) return "東風";
+  if (deg >= 112.5 && deg < 157.5) return "南東の風";
+  if (deg >= 157.5 && deg < 202.5) return "南風";
+  if (deg >= 202.5 && deg < 247.5) return "南西の風";
+  if (deg >= 247.5 && deg < 292.5) return "西風";
+  return "北西の風";
 }
 
 // サーバーコンポーネント
@@ -182,6 +194,49 @@ export default async function HomePage() {
     });
   }
 
+  const windDirName = getWindDirectionName(current.winddirection);
+
+  // ---　風向きアドバイス ---
+  if (current.windspeed >= 10) {
+    if (windDirName.includes("北")) {
+      advices.push({
+        kind: "wind",
+        level: "medium",
+        icon: "❄️",
+        title: "北風に注意",
+        message:
+          "北風で気温が下がりやすい傾向があります。ハウスの温度管理や霜対策を意識しましょう。",
+      });
+    } else if (windDirName.includes("南")) {
+      advices.push({
+        kind: "wind",
+        level: "medium",
+        icon: "☀️",
+        title: "南風による蒸れ注意",
+        message:
+          "南風で温かく湿った空気が入りやすい予想です。病害発生に注意し、換気をこまめに行いましょう。",
+      });
+    } else if (windDirName.includes("西")) {
+      advices.push({
+        kind: "wind",
+        level: "medium",
+        icon: "🌫",
+        title: "西風による乾燥注意",
+        message:
+          "西風で乾燥しやすい予報です。マルチや苗の乾燥に注意し、水分管理を見直しましょう。",
+      });
+    } else if (windDirName.includes("東")) {
+      advices.push({
+        kind: "wind",
+        level: "low",
+        icon: "🌬",
+        title: "東風の影響（軽度）",
+        message:
+          "東風は比較的穏やかな傾向がありますが、ハウス換気の流れなどに影響する場合は配置に注意してください。",
+      });
+    }
+  }
+  // --- アドバイスロジックここまで　---
 
 
   // jsx (returnの中身)
