@@ -32,6 +32,12 @@ type Advice = {
   message: string; // 詳細メッセージ
 };
 
+type DayTag = {
+  icon: string; // 例:　"☀️" "🌧"
+  label: string; // 例: "高温気味" "雨注意"
+  className: string; // Tailwind のクラス
+}
+
 const LAT = 34.65; // 南伊豆あたりの緯度（ざっくり）
 const LON = 138.85; // 南伊豆あたりの経度（ざっくり）
 
@@ -75,9 +81,9 @@ async function fetchWeather(): Promise<WeatherResponse> {
     },
     daily: {
       time: days.map((d) => d.toISOString().slice(0, 10)),
-      temperature_2m_max: [21, 19, 20, 18, 17, 19, 22],
+      temperature_2m_max: [31, 19, 20, 18, 9, 19, 5],
       temperature_2m_min: [12, 11, 10, 9, 10, 11, 13],
-      precipitation_sum: [1.5, 0, 0, 3.2, 5.1, 0.2, 0],
+      precipitation_sum: [12, 0, 0, 3.2, 0, 0.2, 15],
     },
   };
 }
@@ -156,7 +162,16 @@ export default async function HomePage() {
   }
 
   // 風に関するアドバイス
-  if (current.windspeed >= 8) {
+  if (current.windspeed >= 20) {
+    advices.push({
+      kind: "wind",
+      level: "high",
+      icon: "💨",
+      title: "強風注意",
+      message:
+        "風がかなり強く吹く予報です。ハウスやトンネル、支柱・防虫ネットの固定を重点的に確認し飛ばされそうな資材は事前に片づけておきましょう。",
+  });
+  } else if (current.windspeed >= 8) {
     advices.push({
       kind: "wind",
       level: "medium",
@@ -164,7 +179,7 @@ export default async function HomePage() {
       title: "やや強い風",
       message:
         "やや風が強い一日になりそうです。マルチやビニール、ネット・支柱の固定を再確認しておきましょう。"
-  });
+    });
   }
 
 
@@ -259,11 +274,45 @@ export default async function HomePage() {
             const min = data.daily.temperature_2m_min[index];
             const prec = data.daily.precipitation_sum[index];
 
+            // --- 週間予報用のタグ判定 ---
+            const tags: DayTag[] = [];
+
+            // 気温系
+            if (max >= 28) {
+              tags.push({
+                icon: "☀️",
+                label: "高温気味",
+                className: "bg-orange-100 text-orange-700",
+              });
+            } else if (max <= 10) {
+              tags.push({
+                icon: "❄️",
+                label: "低温注意",
+                className: "bg-sky-100 text-sky-700",
+              });
+            }
+
+            // 降水系
+            if (prec >= 10) {
+              tags.push({
+                icon: "🌧",
+                label: "雨量多め",
+                className: "bg-blue-100 text-blue-700",
+              });
+            } else if (prec >= 1) {
+              tags.push({
+                icon: "🌦",
+                label: "にわか雨",
+                className: "bg-indigo-50 text-indigo-700",
+              });
+            }
+
             return (
               <div
                 key={dStr}
-                className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 md:px-4 md:py-3"
+                className="flex flex-col gap-2 rounded-lg bg-slate-50 px-3 py-2 md:flex-row md:items-center md:justify-between md:px-4 md:py-3"
               >
+                {/* 左側：日付 ＋ 今日バッジ */}
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-medium text-slate-700 md:text-base">
                     {label}
@@ -275,22 +324,40 @@ export default async function HomePage() {
                   )}
                 </div>
 
-                <div className="flex items-center gap-4 text-xs md:text-sm">
-                  <span>
-                    最高{" "}
-                    <span className="font-semibold">
-                      {max.toFixed(1)}℃
+                {/* 右側：数値 ＋ タグ */}
+                <div className="flex flex-col gap-1 text-xs md:flex-row md:items-center md:gap-4 md:text-sm">
+                  <div className="flex gap-4">
+                    <span>
+                      最高{" "}
+                      <span className="font-semibold">
+                        {max.toFixed(1)}℃
+                      </span>
                     </span>
-                  </span>
-                  <span>
-                    最低{" "}
-                    <span className="font-semibold">
-                      {min.toFixed(1)}℃
+                    <span>
+                      最低{" "}
+                      <span className="font-semibold">
+                        {min.toFixed(1)}℃
+                      </span>
                     </span>
-                  </span>
-                  <span className="text-sky-700">
-                    降水 {prec.toFixed(1)} mm
-                  </span>
+                    <span className="text-sky-700">
+                      降水 {prec.toFixed(1)} mm
+                    </span>
+                  </div>
+
+                  {/* タグ群 */}
+                  {tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {tags.map((tag, i) => (
+                        <span
+                          key={i}
+                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${tag.className}`}
+                        >
+                          <span>{tag.icon}</span>
+                          <span>{tag.label}</span>
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             );
