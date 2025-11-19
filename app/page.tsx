@@ -21,6 +21,17 @@ type WeatherResponse = {
   daily: DailyWeather;
 };
 
+type AdvicesLevel = "low" | "medium" | "high";
+type AdvicesKind = "temperature" | "rain" | "wind";
+
+type Advice = {
+  kind: AdvicesKind;
+  level: AdvicesLevel;
+  icon: string; // 例："☀️" "🌧" "💨"
+  title: string; // 見出し
+  message: string; // 詳細メッセージ
+};
+
 const LAT = 34.65; // 南伊豆あたりの緯度（ざっくり）
 const LON = 138.85; // 南伊豆あたりの経度（ざっくり）
 
@@ -91,39 +102,69 @@ export default async function HomePage() {
   });
 
   // --- 農作業アドバイスの簡単なロジック ---
-  const advices: string[] = [];
+  const advices: Advice[] = [];
 
   // 気温に関するアドバイス
   if (todayMax >= 28) {
-    advices.push(
-      "最高気温がかなり高めです。潅水を多めにして、作業は朝夕の涼しい時間帯に集中させましょう。"
-    );
+    advices.push({
+      kind: "temperature",
+      level: "high",
+      icon: "☀️",
+      title: "高温注意",
+      message:
+        "最高気温がかなり高めです。潅水を多めにして、作業は朝夕の涼しい時間に集中させましょう。",
+    });
   } else if (todayMax >= 24) {
-    advices.push(
-      "日中は少し熱くなりそうです。ハウス内の換気と作業者の熱中症対策を意識しましょう。"
-    );
-  } else if (todayMax >= 10) {
-    advices.push(
-      "気温が低めです。防寒対策と、夜間の低温ストレスに注意してください。"
-    );
+    advices.push({
+      kind: "temperature",
+      level: "medium",
+      icon: "☀️",
+      title: "やや高めな気温",
+      message:
+        "日中は少し熱くなりそうです。ハウス内の換気と、作業者の熱中症対策を意識しましょう。",
+    });
+  } else if (todayMax <= 10) {
+    advices.push({
+      kind: "temperature",
+      level: "high",
+      icon: "❄️",
+      title: "低温注意",
+      message:
+        "気温が低めです。防寒対策と、夜間の低温ストレスに注意してください。",
+    });
   }
 
   // 降水量に関するアドバイス
   if (todayPrecip >= 10) {
-    advices.push(
-      "降水量が多い予報です。排水路の確認や、収穫・出荷のスケジュール調整を検討しましょう。"
-    );
+    advices.push({
+      kind: "rain",
+      level: "high",
+      icon: "🌧",
+      title: "大雨リスク",
+      message:
+        "降水量が多い予報です。排水路の確認や、収穫・出荷のスケジュール調整を検討しましょう。"
+  });
   } else if (todayPrecip >= 1) {
-    advices.push(
-      "にわか雨の可能性があります。屋外資材や機械が濡れないように注意しておきましょう。"
-    );
+    advices.push({
+      kind: "rain",
+      level: "medium",
+      icon: "🌦",
+      title: "にわか雨の可能性",
+      message:
+        "にわか雨の可能性があります。屋外資材や機械が濡れないように注意しておきましょう。"
+  });
   }
 
   // 風に関するアドバイス
   if (current.windspeed >= 8) {
-    advices.push(
-      "やや風が強い一日になりそうです。マルチやビニール、ネット・支柱の固定を再確認しておきましょう。"
-    );
+    advices.push({
+      kind: "wind",
+      level: "medium",
+      icon: "💨",
+      title: "やや強い風",
+      message:
+        "やや風が強い一日になりそうです。マルチやビニール、ネット・支柱の固定を再確認しておきましょう。"
+  });
   }
 
 
@@ -270,10 +311,50 @@ export default async function HomePage() {
             特別な注意点は少なめの日です。いつも通りの作業計画で問題なさそうです。
           </p>
         ) : (
-          <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-emerald-950">
-              {advices.map((msg, i) => (
-                <li key={i}>{msg}</li>
-            ))}
+          <ul className="mt-3 space-y-3">
+              {advices.map((a, i) => {
+                const levelClass =
+                  a.level === "high"
+                    ? "bg-red-100 text-red-700"
+                    : a.level === "medium"
+                      ? "bg-amber-100 text-amber-700"
+                      : "bg-emerald-100 text-emerald-700"
+                
+                const levelLabel =
+                  a.level === "high"
+                    ? "レベル：高"
+                    : a.level === "medium"
+                      ? "レベル：中"
+                      : "レベル：低";
+                
+                return (
+                  <li
+                    key={i}
+                    className="flex gap-3 rounded-lg bg-emerald-50/80 px-3 py-2 md:px-4 md:py-3"
+                  >
+                    {/* アイコン丸 */}
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-lg">
+                      {a.icon}
+                    </div>
+
+                    <div className="flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-sm font-semibold text-emerald-900 md:text-base">
+                          {a.title}
+                        </span>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${levelClass}`}
+                        >
+                          {levelLabel}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-sm text-emerald-950">
+                        {a.message}
+                      </p>
+                    </div>
+                  </li>
+                );
+              })}
           </ul>
         )}
       </section>
