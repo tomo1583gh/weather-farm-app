@@ -21,12 +21,12 @@ type WeatherResponse = {
   daily: DailyWeather;
 };
 
-type AdvicesLevel = "low" | "medium" | "high";
-type AdvicesKind = "temperature" | "rain" | "wind";
+type AdviceLevel = "low" | "medium" | "high";
+type AdviceKind = "temperature" | "rain" | "wind";
 
 type Advice = {
-  kind: AdvicesKind;
-  level: AdvicesLevel;
+  kind: AdviceKind;
+  level: AdviceLevel;
   icon: string; // 例："☀️" "🌧" "💨"
   title: string; // 見出し
   message: string; // 詳細メッセージ
@@ -98,6 +98,77 @@ function getWindDirectionName(deg: number): string {
   if (deg >= 202.5 && deg < 247.5) return "南西の風";
   if (deg >= 247.5 && deg < 292.5) return "西風";
   return "北西の風";
+}
+
+// 風向き＋風速から1件のアドバイスを返す
+function createWindAdvice(current: CurrentWeather): Advice | null {
+  const speed = current.windspeed; // <km /h>
+  const dirName = getWindDirectionName(current.winddirection);
+
+  // 風が弱い日はスキップ
+  if (speed < 8) return null;
+
+  // 南風：蒸れ・倒伏
+  if (dirName.includes("南")) {
+    const isStrong = speed >= 20;
+    return {
+      kind: "wind",
+      level: isStrong ? "high" : "medium",
+      icon: isStrong ? "🌪" : "☀️",
+      title: isStrong
+        ? "南風＋強風による蒸れ・倒伏注意"
+        : "南風による蒸れ注意",
+      message: isStrong
+        ? "南風かつ風がかなり強い予報です。ハウス内は高温多湿になりやすく、作物の蒸れや倒伏に注意が必要です。換気と支柱・ネットの固定を重点的に確認しましょう。"
+        : "南風で温かく湿った空気が入りやすい予報です。病害発生に注意し、ハウス内の換気をこまめに行いましょう。",
+    };
+  }
+
+  // 北風：冷え込み・乾燥
+  if (dirName.includes("北")) {
+    const isStrong = speed >= 20;
+    return {
+      kind: "wind",
+      level: isStrong ? "high" : "medium",
+      icon: isStrong ? "❄️" : "🧊",
+      title: isStrong
+        ? "北風＋強風による低温・乾燥注意"
+        : "北風による冷え込み注意",
+      message: isStrong
+        ? "北風かつ風が強い予報です。体感温度が大きく下がり、乾燥もしやすくなります。防寒対策と霜・乾燥ストレスに注意してください。"
+        : "北寄りの風で気温が下がりやすい見込みです。ハウスの保温や、夜間の冷え込み対策を意識しましょう。",
+    };
+  }
+
+  // 西風：乾燥
+  if (dirName.includes("西")) {
+    const isStrong = speed >= 20;
+    return {
+      kind: "wind",
+      level: isStrong ? "medium" : "low",
+      icon: "🌫",
+      title: isStrong
+        ? "西風による強い乾燥注意"
+        : "西風による乾燥傾向",
+      message: isStrong
+        ? "西風かつ風が強い予報です。葉や土が乾きやすくなります。潅水タイミングの前倒しや、マルチ・被覆の状態を確認しましょう。"
+        : "西寄りの風でやや乾燥しやすい傾向があります。苗の乾燥や萎れに注意してください。",
+    };
+  }
+
+  // 東寄りの風：影響は小さいための軽いコメント
+  if (dirName.includes("東")) {
+    return {
+      kind: "wind",
+      level: "low",
+      icon: "🌬",
+      title: "東寄りの風の影響",
+      message:
+        "東寄りの風が予想されます。大きなリスクは少ないですが、ハウスの開口部や風の抜け方を確認しておきましょう。",
+    };
+  }
+
+  return null;
 }
 
 // サーバーコンポーネント
@@ -196,46 +267,13 @@ export default async function HomePage() {
 
   const windDirName = getWindDirectionName(current.winddirection);
 
-  // ---　風向きアドバイス ---
-  if (current.windspeed >= 10) {
-    if (windDirName.includes("北")) {
-      advices.push({
-        kind: "wind",
-        level: "medium",
-        icon: "❄️",
-        title: "北風に注意",
-        message:
-          "北風で気温が下がりやすい傾向があります。ハウスの温度管理や霜対策を意識しましょう。",
-      });
-    } else if (windDirName.includes("南")) {
-      advices.push({
-        kind: "wind",
-        level: "medium",
-        icon: "☀️",
-        title: "南風による蒸れ注意",
-        message:
-          "南風で温かく湿った空気が入りやすい予想です。病害発生に注意し、換気をこまめに行いましょう。",
-      });
-    } else if (windDirName.includes("西")) {
-      advices.push({
-        kind: "wind",
-        level: "medium",
-        icon: "🌫",
-        title: "西風による乾燥注意",
-        message:
-          "西風で乾燥しやすい予報です。マルチや苗の乾燥に注意し、水分管理を見直しましょう。",
-      });
-    } else if (windDirName.includes("東")) {
-      advices.push({
-        kind: "wind",
-        level: "low",
-        icon: "🌬",
-        title: "東風の影響（軽度）",
-        message:
-          "東風は比較的穏やかな傾向がありますが、ハウス換気の流れなどに影響する場合は配置に注意してください。",
-      });
-    }
+
+  // 風向き＋風速アドバイス
+  const windAdvice = createWindAdvice(current);
+  if (windAdvice) {
+    advices.push(windAdvice);
   }
+
   // --- アドバイスロジックここまで　---
 
 
