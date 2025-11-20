@@ -392,14 +392,14 @@ export default async function HomePage() {
             {/* 数値部分：最高/最低を色分けして横並びに */}
             <div className="mt-1 flex items-baseline gap-1 text-lg  md:text-xl">
               <span className="flex items-baseline gap-1 tabular-nums">
-                <span className="text-xs md-text-sm text-slate-500">最高</span>
+                <span className="md-text-sm text-slate-500">最高</span>
                 <span className="font-semibold text-rose-600">
                 {todayMax.toFixed(1)}℃
                 </span>
               </span>
 
               <span className="flex items-baseline gap-1 tabular-nums">
-                <span className="text-xs md:text-sm text-slate-500">最低</span>
+                <span className="md:text-sm text-slate-500">最低</span>
                 <span className="font-semibold text-sky-600">
                   {todayMin.toFixed(1)}℃
                 </span>
@@ -431,7 +431,7 @@ export default async function HomePage() {
       </section>
 
       {/* 今日の危険度カード */}
-      <section className="rounded-xl bg white p-4 shadow-sm ring-1 ring-slate-200 md:p-5">
+      <section className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200 md:p-5">
         <div className="flex items-center justify-between gap-4">
           <div>
             <h3 className="text-base font-semibold text-slate-900 md:text-lg">
