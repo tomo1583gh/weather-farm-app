@@ -73,20 +73,21 @@ async function fetchWeather(): Promise<WeatherResponse> {
     longitude: LON,
     timezone: "Asia/Tokyo",
     current_weather: {
-      temperature: 18.5,
-      windspeed: 10,
+      temperature: 30,
+      windspeed: 22,
       winddirection: 180,
       weathercode: 0,
       time: now.toISOString(),
     },
     daily: {
       time: days.map((d) => d.toISOString().slice(0, 10)),
-      temperature_2m_max: [31, 19, 20, 18, 9, 19, 5],
+      temperature_2m_max: [18, 19, 20, 18, 9, 19, 5],
       temperature_2m_min: [12, 11, 10, 9, 10, 11, 13],
-      precipitation_sum: [12, 0, 0, 3.2, 0, 0.2, 15],
+      precipitation_sum: [0, 0, 0, 3.2, 0, 0.2, 15],
     },
   };
 }
+// --- --- 
 
 // 風向き→方角名
 function getWindDirectionName(deg: number): string {
@@ -98,6 +99,68 @@ function getWindDirectionName(deg: number): string {
   if (deg >= 202.5 && deg < 247.5) return "南西の風";
   if (deg >= 247.5 && deg < 292.5) return "西風";
   return "北西の風";
+}
+
+// 今日の危険度スコア
+type RiskLevel = "low" | "medium" | "high";
+
+type RiskScoreResult = {
+  score: number;   // 0~100
+  level: RiskLevel // "low" | "medium" | "high"
+  label: string;   // 表示用ラベル
+};
+
+// 今日の最高気温・降水量・風速からの危険度スコアを計算
+function calcRiskScore(
+  todayMax: number,
+  todayPrecip: number,
+  windSpeed: number
+): RiskScoreResult {
+  let score = 0;
+
+  // 気温（暑さ・寒さ）
+  if (todayMax >= 30) {
+    score += 40;
+  } else if (todayMax >= 25) {
+    score += 25;
+  } else if (todayMax <= 5) {
+    score += 30;
+  } else if (todayMax <= 10) {
+    score += 20;
+  }
+
+  // 降水量
+  if (todayPrecip >= 20) {
+    score += 30;
+  } else if (todayPrecip >= 5) {
+    score += 15;
+  }
+
+  // 風速
+  if (windSpeed >= 20) {
+    score += 30;
+  } else if (windSpeed >= 10) {
+    score += 15;
+  }
+
+  // 0~100に丸める
+  if (score > 100) score = 100;
+
+  let level: RiskLevel;
+  let label: string;
+
+  if (score >= 70) {
+    level = "high";
+    label = "危険度高め";
+  } else if (score >= 40) {
+    level = "medium";
+    label = "注意レベル";
+  } else {
+    level = "low";
+    label = "比較的おだやか";
+  }
+
+  return { score, level, label };
 }
 
 // 風向き＋風速から1件のアドバイスを返す
@@ -190,6 +253,16 @@ export default async function HomePage() {
     minute: "2-digit",
   });
 
+  // 今日の危険度スコア計算
+  const risk = calcRiskScore(todayMax, todayPrecip, current.windspeed);
+
+  const riskColorClass =
+    risk.level === "high"
+      ? "bg-red text-red-700"
+      : risk.level === "medium"
+        ? "bg-amber-100 text-amber-700"
+        : "bg-emerald-100 text-emerald-700";
+
   // --- 農作業アドバイスの簡単なロジック ---
   const advices: Advice[] = [];
 
@@ -280,6 +353,7 @@ export default async function HomePage() {
   // jsx (returnの中身)
   return (
     <div className="space-y-4 md:space-y-6">
+
       {/* 現在の天気カード */}
       <section className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200 md:p-5">
         <div className="flex items-baseline justify-between gap-4">
@@ -314,8 +388,22 @@ export default async function HomePage() {
             <div className="text-xs font-medium text-slate-500">
               今日の予想気温
             </div>
-            <div className="mt-1 text-lg font-semibold md:text-xl">
-              最高 {todayMax.toFixed(1)}℃ / 最低 {todayMin.toFixed(1)}℃
+
+            {/* 数値部分：最高/最低を色分けして横並びに */}
+            <div className="mt-1 flex items-baseline gap-1 text-lg  md:text-xl">
+              <span className="flex items-baseline gap-1 tabular-nums">
+                <span className="text-xs md-text-sm text-slate-500">最高</span>
+                <span className="font-semibold text-rose-600">
+                {todayMax.toFixed(1)}℃
+                </span>
+              </span>
+
+              <span className="flex items-baseline gap-1 tabular-nums">
+                <span className="text-xs md:text-sm text-slate-500">最低</span>
+                <span className="font-semibold text-sky-600">
+                  {todayMin.toFixed(1)}℃
+                </span>
+              </span>
             </div>
           </div>
 
@@ -336,9 +424,39 @@ export default async function HomePage() {
               {current.windspeed.toFixed(1)} km/h
             </div>
             <div className="text-xs text-slate-500">
-              風向 {current.winddirection.toFixed(0)}°
+              風向 {windDirName} ({current.winddirection.toFixed(0)}°)
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* 今日の危険度カード */}
+      <section className="rounded-xl bg white p-4 shadow-sm ring-1 ring-slate-200 md:p-5">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h3 className="text-base font-semibold text-slate-900 md:text-lg">
+              今日の気象リスク評価
+            </h3>
+            <p className="mt-1 text-xs text-slate-500">
+              気温・降水量・風の強さから、簡易的な危険度スコアを表示しています（学習用）。
+            </p>
+          </div>
+
+          <div
+            className={`rounded-full px-3 py-1 text-xs font-medium ${riskColorClass}`}
+          >
+            {risk.label}
+          </div>
+        </div>
+
+        <div className="mt-4 flex items-baseline gap-3">
+          <div className="text-3xl font-bold md:text-4xl">
+            {risk.score}
+            <span className="text-lg font-semibold"> / 100</span>
+          </div>
+          <p className="text-xs text-slate-500 md:text-sm">
+            ※ あくまでも目安です。実際の作業計画では、作物の状態や圃場の条件も合わせて判断してください。
+          </p>
         </div>
       </section>
 
@@ -405,8 +523,11 @@ export default async function HomePage() {
                 key={dStr}
                 className="flex flex-col gap-2 rounded-lg bg-slate-50 px-3 py-2 md:flex-row md:items-center md:justify-between md:px-4 md:py-3"
               >
-                {/* 左側：日付 ＋ 今日バッジ */}
-                <div className="flex items-center gap-3">
+                {/* 1行目：日付＋今日のバッジ＋数値（横並び・位置固定 */}
+                <div className="flex items-center justify-between gap-3">
+
+                {/* 左側：日付ブロック（幅固定） */}
+                <div className="flex items-center gap-2 md:w-40">
                   <span className="text-sm font-medium text-slate-700 md:text-base">
                     {label}
                   </span>
@@ -417,41 +538,45 @@ export default async function HomePage() {
                   )}
                 </div>
 
-                {/* 右側：数値 ＋ タグ */}
-                <div className="flex flex-col gap-1 text-xs md:flex-row md:items-center md:gap-4 md:text-sm">
-                  <div className="flex gap-4">
-                    <span>
-                      最高{" "}
-                      <span className="font-semibold">
+                {/* 右側：最高 / 最低 / 降水量　（幅固定＋色分け*/}
+                  <div className="flex items-baseline gap-4 text-xs md:text-sm">
+                    <span className="flex w-28 items-baseline justify-end gap-1 tabular-nums">
+                      <span className="text-[11px] text-slate-500">最高</span>
+                      <span className="font-semibold text-rose-600">
                         {max.toFixed(1)}℃
                       </span>
                     </span>
-                    <span>
-                      最低{" "}
-                      <span className="font-semibold">
+
+                    <span className="flex w-28 items-baseline justify-end gap-1 tabular-nums">
+                      <span className="text-[11px] text-slate-500">最低</span>
+                      <span className="font-semibold text-sky-600">
                         {min.toFixed(1)}℃
                       </span>
                     </span>
-                    <span className="text-sky-700">
-                      降水 {prec.toFixed(1)} mm
+
+                    <span className="flex w-28 items-baseline justify-end gap-1 tabular-nums">
+                      <span className="text-[11px] text-slate-500">降水</span>
+                      <span className="font-semibold text-sky-700">
+                        {prec.toFixed(1)}mm
+                      </span>
                     </span>
                   </div>
-
-                  {/* タグ群 */}
-                  {tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                      {tags.map((tag, i) => (
-                        <span
-                          key={i}
-                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${tag.className}`}
-                        >
-                          <span>{tag.icon}</span>
-                          <span>{tag.label}</span>
-                        </span>
-                      ))}
-                    </div>
-                  )}
                 </div>
+
+                {/* 2行目：タグ（あれば表示・なければ何も表示しない） */}
+                {tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {tags.map((tag, i) => (
+                      <span
+                        key={i}
+                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${tag.className}`}
+                      >
+                        <span>{tag.icon}</span>
+                        <span>{tag.label}</span>
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             );
           })}
