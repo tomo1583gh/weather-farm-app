@@ -1,2 +1,2 @@
-:HL["/weather-farm-app/_next/static/chunks/f6e8cea213b655ee.css","style"]
-0:{"buildId":"ILk754uQzl_NTBGPqdIsM","tree":{"name":"","paramType":null,"paramKey":"","hasRuntimePrefetch":false,"slots":{"children":{"name":"__PAGE__","paramType":null,"paramKey":"__PAGE__","hasRuntimePrefetch":false,"slots":null,"isRootLayout":false}},"isRootLayout":true},"staleTime":300}
+:HL["./_next/static/chunks/f6e8cea213b655ee.css","style"]
+0:{"buildId":"Ucd7USTk1-hN61Yg5acht","tree":{"name":"","paramType":null,"paramKey":"","hasRuntimePrefetch":false,"slots":{"children":{"name":"__PAGE__","paramType":null,"paramKey":"__PAGE__","hasRuntimePrefetch":false,"slots":null,"isRootLayout":false}},"isRootLayout":true},"staleTime":300}
