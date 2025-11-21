@@ -2,5 +2,5 @@
 2:I[24936,["/weather-farm-app/_next/static/chunks/b10cbaf9a8f9673b.js"],"default"]
 3:I[97367,["/weather-farm-app/_next/static/chunks/42879de7b8087bc9.js"],"OutletBoundary"]
 4:"$Sreact.suspense"
-0:{"buildId":"i2AyQ0POySkFL1TZQ2EG7","rsc":["$","$1","c",{"children":[["$","main",null,{"className":"mx-auto max-w-3xl p-4 md:p-6","children":["$","$L2",null,{}]}],[["$","script","script-0",{"src":"/weather-farm-app/_next/static/chunks/b10cbaf9a8f9673b.js","async":true}]],["$","$L3",null,{"children":["$","$4",null,{"name":"Next.MetadataOutlet","children":"$@5"}]}]]}],"loading":null,"isPartial":false}
+0:{"buildId":"gxOkFaZe1Up2f02azjrdg","rsc":["$","$1","c",{"children":[["$","main",null,{"className":"mx-auto max-w-3xl p-4 md:p-6","children":["$","$L2",null,{}]}],[["$","script","script-0",{"src":"/weather-farm-app/_next/static/chunks/b10cbaf9a8f9673b.js","async":true}]],["$","$L3",null,{"children":["$","$4",null,{"name":"Next.MetadataOutlet","children":"$@5"}]}]]}],"loading":null,"isPartial":false}
 5:null

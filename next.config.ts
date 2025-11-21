@@ -1,12 +1,11 @@
 import type { NextConfig } from "next";
 
-const isProd = process.env.NODE_ENV === "production";
-
 const nextConfig: NextConfig = {
+  // GitHub Pages で使う静的出力
   output: "export",
-  // GitHub Pagesで/weather-farm-appは以下に出す想定
-  basePath: isProd ? "/weather-farm-app" : "",
-  assetPrefix: isProd ? "/weather-farm-app" : "",
+  // 静的ファイルのパスを相対にする
+  // → /_next/... ではなく ./_next/... になる
+  assetPrefix: "./",
 };
 
 export default nextConfig;
