@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "export": "next export -o docs",
+    "build:pages": "npm run build && npm run export"
   },
   "dependencies": {
     "next": "16.0.3",
