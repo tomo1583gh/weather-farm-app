@@ -7,8 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "export": "next export -o docs",
-    "build:pages": "npm run build && npm run export"
+    "build:pages": "next build && rm -rf docs && cp -r out docs && touch docs/.nojekyll"
   },
   "dependencies": {
     "next": "16.0.3",

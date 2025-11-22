@@ -392,7 +392,7 @@ export default function WeatherDashboard() {
       <section className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200 md:p-5">
         <div className="flex items-baseline justify-between gap-4">
           <div>
-            <h2 className="text-lg font-semibold font-slate-900 md:text-xl">
+            <h2 className="text-lg font-semibold text-gray-900 md:text-xl">
               南伊豆の現在の天気
             </h2>
             <p className="mt-1 text-xs text-slate-500 md:text-sm">
@@ -483,9 +483,9 @@ export default function WeatherDashboard() {
         </div>
 
         <div className="mt-4 flex items-baseline gap-3">
-          <div className="text-3xl font-bold md:text-4xl whitespace-nowrap">
+          <div className="text-3xl font-bold md:text-4xl text-gray-900 whitespace-nowrap">
             {risk.score}
-            <span className="text-lg font-semibold text-gray"> / 100</span>
+            <span className="text-lg font-semibold text-gray text-gray-900"> / 100</span>
           </div>
           <p className="text-xs text-slate-500 md:text-sm">
             ※ あくまでも目安です。実際の作業計画では、作物の状態や圃場の条件も合わせて判断してください。
