@@ -57,7 +57,7 @@ const LON = 138.85;
 async function fetchWeatherBrowser(): Promise<WeatherResponse> {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Asia%2FTokyo`;
 
-  console.log("[WEATHER] client fetch start", url);
+  // console.log("[WEATHER] client fetch start", url);
 
   const res = await fetch(url, {
     // 好みで no-store にしてもOK
@@ -69,7 +69,7 @@ async function fetchWeatherBrowser(): Promise<WeatherResponse> {
   }
 
   const json = (await res.json()) as WeatherResponse;
-  console.log("[WEATHER] client fetch success");
+  // console.log("[WEATHER] client fetch success");
   return json;
 }
 
@@ -245,7 +245,7 @@ export default function WeatherDashboard() {
         setWeather(data);
         setErrorMessage(null);
       } catch (err) {
-        console.error("[WEATHER] client fetch failed, use dummy:", err);
+        // console.error("[WEATHER] client fetch failed, use dummy:", err);
         if (cancelled) return;
 
         setWeather(createDummyWeather());
@@ -392,7 +392,7 @@ export default function WeatherDashboard() {
       <section className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200 md:p-5">
         <div className="flex items-baseline justify-between gap-4">
           <div>
-            <h2 className="text-lg font-semibold md:text-xl">
+            <h2 className="text-lg font-semibold font-slate-900 md:text-xl">
               南伊豆の現在の天気
             </h2>
             <p className="mt-1 text-xs text-slate-500 md:text-sm">
@@ -414,7 +414,7 @@ export default function WeatherDashboard() {
             <div className="rounded-full bg-sky-100 px-3 py-1 text-xs font-medium text-sky-800">
               現在気温
             </div>
-            <div className="text-3xl font-bold md:text-4xl">
+            <div className="text-3xl font-bold text-gray-900 md:text-4xl">
               {current.temperature.toFixed(1)}
               <span className="text-lg">℃</span>
             </div>
@@ -446,7 +446,7 @@ export default function WeatherDashboard() {
             <div className="text-xs font-medium text-slate-500">
               今日の合計降水量（合計）
             </div>
-            <div className="mt-1 text-lg font-semibold md:text-xl">
+            <div className="mt-1 text-lg font-semibold text-gray-900 md:text-xl">
               {todayPrecip.toFixed(1)} mm
             </div>
           </div>
@@ -454,7 +454,7 @@ export default function WeatherDashboard() {
           {/* 風 */}
           <div className="flex flex-col justify-center rounded-lg bg-slate-50 px-4 py-3">
             <div className="text-xs font-medium text-slate-500">風</div>
-            <div className="mt-1 text-lg font-semibold md:text-xl">
+            <div className="mt-1 text-lg font-semibold text-gray-900 md:text-xl">
               {current.windspeed.toFixed(1)} km/h
             </div>
             <div className="text-xs text-slate-500">
@@ -485,7 +485,7 @@ export default function WeatherDashboard() {
         <div className="mt-4 flex items-baseline gap-3">
           <div className="text-3xl font-bold md:text-4xl whitespace-nowrap">
             {risk.score}
-            <span className="text-lg font-semibold"> / 100</span>
+            <span className="text-lg font-semibold text-gray"> / 100</span>
           </div>
           <p className="text-xs text-slate-500 md:text-sm">
             ※ あくまでも目安です。実際の作業計画では、作物の状態や圃場の条件も合わせて判断してください。
@@ -497,7 +497,7 @@ export default function WeatherDashboard() {
       <section className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200 md:p-5">
         <div className="flex items-baseline justify-between gap-4">
           <div>
-            <h3 className="text-base font-semibold md:text-lg">
+            <h3 className="text-base font-semibold text-gray-900 md:text-lg">
               週間予報（Open-Meteo）
             </h3>
             <p className="mt-1 text-xs text-slate-500">
@@ -553,7 +553,7 @@ export default function WeatherDashboard() {
                 key={dStr}
                 className="flex flex-col gap-2 rounded-lg bg-slate-50 px-3 py-2 md:flex-row md:items-center md:justify-between md:px-4 md:py-3"
               >
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-2 md:w-40">
                     <span className="text-sm font-medium text-slate-700 md:text-base">
                       {label}
@@ -565,22 +565,22 @@ export default function WeatherDashboard() {
                     )}
                   </div>
 
-                  <div className="flex items-baseline gap-4 text-xs md:text-sm">
-                    <span className="flex w-28 items-baseline justify-end gap-1 tabular-nums">
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs md:text-sm">
+                    <span className="flex items-baseline justify-end gap-1 tabular-nums">
                       <span className="text-[11px] text-slate-500">最高</span>
                       <span className="font-semibold text-rose-600">
                         {max.toFixed(1)}℃
                       </span>
                     </span>
 
-                    <span className="flex w-28 items-baseline justify-end gap-1 tabular-nums">
+                    <span className="flex items-baseline justify-end gap-1 tabular-nums">
                       <span className="text-[11px] text-slate-500">最低</span>
                       <span className="font-semibold text-sky-600">
                         {min.toFixed(1)}℃
                       </span>
                     </span>
 
-                    <span className="flex w-28 items-baseline justify-end gap-1 tabular-nums">
+                    <span className="flex items-baseline justify-end gap-1 tabular-nums">
                       <span className="text-[11px] text-slate-500">降水</span>
                       <span className="font-semibold text-sky-700">
                         {prec.toFixed(1)}mm
